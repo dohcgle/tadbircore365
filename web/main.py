@@ -1,29 +1,45 @@
 import os
 import aiosqlite
-from fastapi import FastAPI, Request, Depends, Form
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request, Depends, Form, Cookie
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.exceptions import HTTPException
 from fastapi import status
 import secrets
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-security = HTTPBasic()
 
 DB_PATH = "data/tadbircore.db"
 
-def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = secrets.compare_digest(credentials.username, os.getenv("DASHBOARD_USER", "admin"))
-    correct_password = secrets.compare_digest(credentials.password, os.getenv("DASHBOARD_PASS", "admin123"))
-    if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return credentials.username
+def get_current_username(auth_token: str = Cookie(None)):
+    if not auth_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    expected_token = os.getenv("DASHBOARD_PASS", "admin123") + "_token"
+    if auth_token != expected_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    return os.getenv("DASHBOARD_USER", "admin")
+
+@app.exception_handler(status.HTTP_401_UNAUTHORIZED)
+async def unauthorized_exception_handler(request: Request, exc: HTTPException):
+    return RedirectResponse(url="/login")
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_get(request: Request):
+    return templates.TemplateResponse(request=request, name="login.html")
+
+@app.post("/login")
+async def login_post(request: Request, username: str = Form(...), password: str = Form(...)):
+    correct_username = secrets.compare_digest(username, os.getenv("DASHBOARD_USER", "admin"))
+    correct_password = secrets.compare_digest(password, os.getenv("DASHBOARD_PASS", "admin123"))
+    
+    if correct_username and correct_password:
+        response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+        token = os.getenv("DASHBOARD_PASS", "admin123") + "_token"
+        response.set_cookie(key="auth_token", value=token, httponly=True)
+        return response
+    else:
+        return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": "Noto'g'ri login yoki parol"})
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, username: str = Depends(get_current_username)):
@@ -74,11 +90,9 @@ async def arizalar_dashboard(request: Request, username: str = Depends(get_curre
 
 @app.get("/logout")
 async def logout():
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Logged out",
-        headers={"WWW-Authenticate": "Basic"},
-    )
+    response = RedirectResponse(url="/login")
+    response.delete_cookie("auth_token")
+    return response
 
 @app.post("/api/update_status")
 async def update_status(

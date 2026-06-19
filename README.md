@@ -110,3 +110,8 @@ docker compose up -d --build
 - **Loglarni ko'rish:** `docker compose logs -f`
 - **Tizimni to'xtatish:** `docker compose down`
 - **Web servisni qayta qurish:** `docker compose up -d --build web`
+
+
+### 4. DNS
+- jaxson.ns.cloudflare.com
+- lara.ns.cloudflare.com
