@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block header_title %}Kredit Arizalari{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <h2 class="text-lg font-semibold mb-4">Barcha arizalar ro'yxati</h2>
+    <div class="overflow-x-auto mt-4">
+        <table id="arizalarTable" class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-500 text-sm border-b">
+                    <th class="py-3 px-4 font-medium">ID</th>
+                    <th class="py-3 px-4 font-medium">Mijoz (Tel)</th>
+                    <th class="py-3 px-4 font-medium">Biznes nomi</th>
+                    <th class="py-3 px-4 font-medium">Bank</th>
+                    <th class="py-3 px-4 font-medium">Summa</th>
+                    <th class="py-3 px-4 font-medium">Sana</th>
+                    <th class="py-3 px-4 font-medium">Holati</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm">
+                {% for req in requests %}
+                <tr class="border-b last:border-0 hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium">{{ req.request_id }}</td>
+                    <td class="py-3 px-4">{{ req.phone }}</td>
+                    <td class="py-3 px-4">{{ req.business_name }}</td>
+                    <td class="py-3 px-4">{{ req.selected_bank }}</td>
+                    <td class="py-3 px-4 font-medium">{{ req.amount }}</td>
+                    <td class="py-3 px-4 text-gray-500">{{ req.created_at[:10] }}</td>
+                    <td class="py-3 px-4">
+                        <select onchange="updateStatus('{{ req.request_id }}', this.value)" class="text-xs font-medium rounded-full px-2 py-1 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white cursor-pointer {% if req.status == 'Kutilyapti' %}text-yellow-700 bg-yellow-50{% elif req.status == 'Rad etildi' %}text-red-700 bg-red-50{% else %}text-green-700 bg-green-50{% endif %}">
+                            <option value="Kutilyapti" {% if req.status == 'Kutilyapti' %}selected{% endif %}>Kutilyapti</option>
+                            <option value="Qabul qilindi" {% if req.status == 'Qabul qilindi' %}selected{% endif %}>Qabul qilindi</option>
+                            <option value="Tasdiqlandi" {% if req.status == 'Tasdiqlandi' %}selected{% endif %}>Tasdiqlandi</option>
+                            <option value="Rad etildi" {% if req.status == 'Rad etildi' %}selected{% endif %}>Rad etildi</option>
+                        </select>
+                        {% if req.accepted_by %}
+                        <div class="text-[10px] text-gray-400 mt-1" title="Operator">Op: {{ req.accepted_by }}</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#arizalarTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/uz.json"
+            },
+            "order": [[ 5, "desc" ]] // Sort by date descending
+        });
+    });
+
+    async function updateStatus(requestId, newStatus) {
+        const formData = new FormData();
+        formData.append('request_id', requestId);
+        formData.append('new_status', newStatus);
+
+        try {
+            const response = await fetch('/api/update_status', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                window.location.reload();
+            } else {
+                alert('Xatolik yuz berdi!');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Tarmoq xatosi!');
+        }
+    }
+</script>
+{% endblock %}

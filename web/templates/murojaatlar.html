@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block header_title %}Oddiy Murojaatlar{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <h2 class="text-lg font-semibold mb-4">Murojaatlar ro'yxati</h2>
+    <div class="overflow-x-auto mt-4">
+        <table id="murojaatTable" class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-500 text-sm border-b">
+                    <th class="py-3 px-4 font-medium w-32">Murojaat ID</th>
+                    <th class="py-3 px-4 font-medium w-48">Mijoz (Tel)</th>
+                    <th class="py-3 px-4 font-medium">Xabar matni</th>
+                    <th class="py-3 px-4 font-medium w-48">Sana</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm">
+                {% for req in requests %}
+                <tr class="border-b last:border-0 hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium">{{ req.request_id }}</td>
+                    <td class="py-3 px-4">{{ req.phone }}</td>
+                    <td class="py-3 px-4">
+                        <div class="max-w-2xl text-gray-700 whitespace-pre-wrap">{{ req.message_text }}</div>
+                    </td>
+                    <td class="py-3 px-4 text-gray-500">{{ req.created_at[:16] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#murojaatTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/uz.json"
+            },
+            "order": [[ 3, "desc" ]] // Sort by date descending
+        });
+    });
+</script>
+{% endblock %}

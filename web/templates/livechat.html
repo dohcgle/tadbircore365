@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block header_title %}Live Chat Monitoring{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <h2 class="text-lg font-semibold mb-4">Faol chatlar ro'yxati</h2>
+    
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded shadow-sm text-sm">
+        <p class="text-blue-800">
+            <strong>Monitoring rejimi:</strong> Foydalanuvchilarning bot bilan bo'layotgan chat so'rovlari. Javob berish Telegram orqali amalga oshiriladi.
+        </p>
+    </div>
+
+    <div class="overflow-x-auto mt-4">
+        <table id="livechatTable" class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-500 text-sm border-b">
+                    <th class="py-3 px-4 font-medium w-32">Chat ID</th>
+                    <th class="py-3 px-4 font-medium w-48">Mijoz (Tel)</th>
+                    <th class="py-3 px-4 font-medium">So'nggi xabar</th>
+                    <th class="py-3 px-4 font-medium w-48">Sana</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm">
+                {% for chat in chats %}
+                <tr class="border-b last:border-0 hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium">{{ chat.request_id }}</td>
+                    <td class="py-3 px-4">{{ chat.phone }}</td>
+                    <td class="py-3 px-4">
+                        <div class="max-w-2xl text-gray-700 whitespace-pre-wrap">{{ chat.message_text }}</div>
+                        <div class="mt-2">
+                            <a href="https://t.me/tadbircore365_bot" target="_blank" class="text-xs text-blue-600 hover:underline">
+                                Telegramda ochish <i class="fas fa-external-link-alt ml-1"></i>
+                            </a>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-gray-500">{{ chat.created_at[:16] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#livechatTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/uz.json"
+            },
+            "order": [[ 3, "desc" ]] // Sort by date descending
+        });
+    });
+</script>
+{% endblock %}

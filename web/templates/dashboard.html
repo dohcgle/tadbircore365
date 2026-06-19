@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block header_title %}Boshqaruv Paneli (Statistika){% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center">
+        <div class="p-4 rounded-full bg-blue-50 text-blue-600 mr-4">
+            <i class="fas fa-file-invoice fa-2x"></i>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 font-medium">Jami Arizalar</p>
+            <p class="text-3xl font-bold text-gray-800">{{ total_requests }}</p>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center">
+        <div class="p-4 rounded-full bg-green-50 text-green-600 mr-4">
+            <i class="fas fa-check-circle fa-2x"></i>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 font-medium">Qabul Qilinganlar</p>
+            <p class="text-3xl font-bold text-gray-800">{{ accepted_requests }}</p>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center">
+        <div class="p-4 rounded-full bg-yellow-50 text-yellow-600 mr-4">
+            <i class="fas fa-hourglass-half fa-2x"></i>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 font-medium">Kutilayotganlar</p>
+            <p class="text-3xl font-bold text-gray-800">{{ pending_requests }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Area -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-semibold mb-4">Arizalar dinamikasi (Banklar kesimida)</h2>
+        <canvas id="banksChart" height="100"></canvas>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-semibold mb-4">Holati bo'yicha</h2>
+        <canvas id="statusChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const banksDataRaw = {{ banks_data|tojson }};
+    const labels = banksDataRaw.map(b => b.selected_bank);
+    const data = banksDataRaw.map(b => b.count);
+
+    const ctxBanks = document.getElementById('banksChart').getContext('2d');
+    new Chart(ctxBanks, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Arizalar soni',
+                data: data,
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Qabul qilingan/Boshqa', 'Kutilayotgan'],
+            datasets: [{
+                data: [{{ accepted_requests }}, {{ pending_requests }}],
+                backgroundColor: ['#10B981', '#F59E0B'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+{% endblock %}

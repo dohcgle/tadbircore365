@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tadbircore365 - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jQuery and DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+    <style>
+        /* Make DataTables look slightly better with Tailwind */
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+            outline: none;
+        }
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            outline: none;
+        }
+        table.dataTable thead th, table.dataTable thead td {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col justify-between">
+            <div>
+                <div class="p-6 text-2xl font-bold text-center border-b border-gray-800">
+                    Tadbircore365
+                </div>
+                <nav class="px-4 py-6 space-y-2">
+                    <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {% if active_page == 'dashboard' %}bg-blue-600 shadow{% else %}hover:bg-gray-800{% endif %}">
+                        <i class="fas fa-home w-5 text-center"></i>
+                        Dashboard
+                    </a>
+                    <a href="/arizalar" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {% if active_page == 'arizalar' %}bg-blue-600 shadow{% else %}hover:bg-gray-800{% endif %}">
+                        <i class="fas fa-file-invoice w-5 text-center"></i>
+                        Arizalar
+                    </a>
+                    <a href="/livechat" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {% if active_page == 'livechat' %}bg-blue-600 shadow{% else %}hover:bg-gray-800{% endif %}">
+                        <i class="fas fa-comments w-5 text-center"></i>
+                        Live Chat
+                    </a>
+                    <a href="/murojaatlar" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {% if active_page == 'murojaatlar' %}bg-blue-600 shadow{% else %}hover:bg-gray-800{% endif %}">
+                        <i class="fas fa-envelope w-5 text-center"></i>
+                        Murojaatlar
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-gray-800 text-sm text-gray-400">
+                <a href="/logout" onclick="logout()" class="flex items-center gap-3 px-4 py-3 hover:bg-red-600 hover:text-white rounded-lg transition-colors mb-4 cursor-pointer text-gray-300">
+                    <i class="fas fa-sign-out-alt w-5 text-center"></i>
+                    Accountdan chiqish
+                </a>
+                <div class="text-center">Admin Panel v1.0</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-semibold">{% block header_title %}Boshqaruv Paneli{% endblock %}</h1>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                        A
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="p-8">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            // Basic auth clear trick
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", "/logout", true);
+            xmlhttp.setRequestHeader("Authorization", "Basic logout");
+            xmlhttp.send();
+            setTimeout(function() {
+                window.location.href = "/";
+            }, 500);
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

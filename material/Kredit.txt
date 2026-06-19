@@ -1,0 +1,76 @@
+TG_bot 
+
+Ssenariy
+1-qadam. Tadbirkordan INN yoki JSSHIR suralidi, mock bazadan quyidagi malumolatlarni olib tadbirkorga kursatadi:
+	namuna1:
+	1. YTT - TOSHPULATOV XOLBEK RUSTAM O‘G‘LI
+	2. Bank: Biznesni Rivojlantirish Banki 
+	3. H/r: 20218000005405745001  
+	
+	namuna2:
+	1. MChJ - TOSHPULATOV XOLBEK RUSTAM O‘G‘LI
+	2. Bank: Davrbank 
+	3. H/r: 20218000005405745001
+
+2-qadam 
+Kredit summasi tanlash yoki uzi kiritish imokiyati beriladi
+Kredit muddati tanlash yoki uzi kiritish imokiyati beriladi
+
+3-qadam:
+	
+Kredit olish maqsadi:
+1. Mikrokredit 100 mln gacha
+2. Kundalik xarajatlar uchun kredit
+3. Biznesni rivojlantirish uchun kredit (uzoq muddatli)
+4. Tadbirkorlik faoliyatini yangi boshlagan subyektlar uchun kreditlar
+5. Biznes uchun avtokredit
+6. Overdraft (hisobvaraqdagi mablag' yetishmovchiligini qoplash uchun qayta tiklanuvchi kredit)
+7. Biznes uchun ipoteka/ qurilish maqsadidagi kredit
+8. Yashil kredit
+
+4-qadam.
+Taminot suraladi:
+1. Avtomobil
+2. Kuchmas mulik
+3. Texnika
+Rasmini yuklash imkoniyati beriladi
+
+5-qadam
+Bir qancha banklar nomi bilan chiqsin, taxminan 2-5 ta bank. Mijoz ga hammasiga ariza yuborish yoki bironta bankni tanlab yuborish imkoniyati berilsin.
+Mijozdan majburiy telefonini yuborish knopkasini bersin, yubormasa keying qadamga utmasin
+
+
+6-qadam.
+Mijozga xabar: 
+Kredit ariza detalizatsiyasi:
+Kredit summasi
+Kredit muddati
+Kredit olish maqsadi
+Taminot nomi
+Siznining arizangiz ID ruyxatga olindi va quyidagi banklarga yuborildi, banklar sizga aloqaga chiqadi!
+
+
+Banklar ruyxati:
+	
+1	Agro Bank
+2	Aloqa Bank
+3	Asaka Bank
+4	Biznesni Rivojlantirish Banki
+5	Mikrokredit Bank
+6	O‘zmilliybank (NBU)
+7	Sanoat Qurilish Bank
+8	Turon Bank
+9	Xalq Bank
+10	Anor Bank
+11	Asia Alliance Bank
+12	Davr Bank
+13	Garant Bank
+14	Hamkor Bank
+15	Infin Bank
+16	Ipak Yuli Bank
+17	Kapital Bank
+18	Orient Finans Bank
+19	TBC Bank
+20	Tenge Bank
+21	Trast Bank
+22	Universal Bank

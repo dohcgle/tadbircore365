@@ -1,0 +1,66 @@
+Listed directory projects
+Listed directory tadbircore365_bot
+Listed directory bot
+Viewed requirements.txt:1-4
+Listed directory handlers
+Viewed start.py:1-56
+Viewed credit.py:1-390
+Viewed docker-compose.yml:1-12
+Viewed main.py:1-27
+
+Sizning `tadbircore365_bot` loyihangizni tahlil qilib chiqdim. Bot `aiogram 3.x` va `aiosqlite` asosida yozilgan bo'lib, hozirda biznes kreditlarini olish jarayonini avtomatlashtirishga qaratilgan qator funksiyalarga ega.
+
+Quyida Texnik Topshiriq (TZ) uchun botning **mavjud funksiyalari** va **professional deploy qilish** bo'yicha ma'lumotlarni tayyorlab berdim. Ushbu matnni to'g'ridan-to'g'ri TZ hujjatiga kiritishingiz mumkin.
+
+---
+
+### I. Telegram Botning Mavjud Funksiyalari (MVP bosqichi)
+
+Bot hozirgi vaqtda mijozlarga kredit bo'yicha yagona arizani shakllantirish va uni banklarga yuborish bo'yicha quyidagi jarayonlarni avtomatlashtirgan:
+
+1. **Mijozni identifikatsiya qilish:**
+   * Foydalanuvchidan INN (9 xonali) yoki JSHSHIR (14 xonali) raqamini qabul qilish.
+   * Kiritilgan ma'lumot asosida bazadan korxona/tadbirkor haqidagi ma'lumotlarni (tashkilot nomi, faoliyat turi, banki va hisob raqami) avtomatik aniqlash va tasdiqlash.
+2. **Kredit parametrlarini interaktiv tarzda yig'ish (FSM orqali):**
+   * **Kredit summasi:** Tugmalar orqali tayyor summalarni tanlash yoki ixtiyoriy miqdorni qo'lda kiritish imkoniyati.
+   * **Kredit muddati:** Qarzni qaytarish muddatini tanlash.
+   * **Kredit maqsadi:** Mikrokredit, kundalik xarajatlar, biznesni rivojlantirish, avtokredit, yashil kredit va boshqa maqsadlarni belgilash.
+   * **Ta'minot (garov) turi:** Avtomobil, ko'chmas mulk, texnika kabi ta'minot turlarini tanlash.
+   * **Media biriktirish:** Garov mulkining rasmini yoki hujjatini botga yuklash (yoki ushbu qadamni o'tkazib yuborish).
+3. **Avtomatlashtirilgan bank tavsiyalari va tanlov:**
+   * So'rov parametrlari asosida mavjud banklar ro'yxatidan (hozirda 22 ta bank) 3 ta mos bankni tavsiya qilish.
+   * Foydalanuvchiga barcha tavsiya etilgan banklarga birdaniga ariza yuborish yoki aniq bitta bankni tanlash imkonini berish.
+4. **Shaxsiy ma'lumotlarni xavfsiz qabul qilish:**
+   * Arizani tasdiqlash uchun mijozning telefon raqamini majburiy ravishda Telegram kontakt orqali yuborishni talab qilish.
+5. **Arizalarni ro'yxatga olish va saqlash:**
+   * Har bir arizaga noyob identifikator (masalan: `REQ-84723`) taqdim etish.
+   * Barcha kiritilgan ma'lumotlarni asinxron tartibda ma'lumotlar bazasida (hozircha SQLite) saqlash.
+6. **Qo'shimcha Qulayliklar:**
+   * **Ko'p tilli interfeys asosi:** O'zbek, Rus va Ingliz tillarini qo'llab-quvvatlash.
+   * **Moslashuvchan navigatsiya:** So'rovnomani to'ldirish vaqtida "Orqaga" va "Oldinga" tugmalari orqali xatolarni tuzatish imkoniyati.
+
+---
+
+### II. Loyihani Professional Muhitga Joylashtirish (Production Deployment) Talablari
+
+Botni yuqori yuklamalarda (highload) barqaror va xavfsiz ishlashini ta'minlash maqsadida, loyihani serverga deploy qilishda quyidagi texnik yechimlar va eng yaxshi amaliyotlar (Best Practices) joriy qilinishi lozim:
+
+**1. Ma'lumotlar Bazasi va Infratuzilma:**
+* **Baza migratsiyasi:** Hozirgi test rejimida ishlayotgan SQLite ma'lumotlar bazasi to'liq xavfsiz, yuqori tezlikda va parallel so'rovlarda ishlay oladigan **PostgreSQL** (asyncpg drayveri va SQLAlchemy/Alembic) bazasiga o'tkazilishi shart.
+* **Konteynerizatsiya:** Loyihaning mavjud `Dockerfile` va `docker-compose.yml` fayllari yordamida izolyatsiya qilingan muhitda ishga tushirish qat'iy talab etiladi.
+
+**2. Arxitektura va Tarmoq:**
+* **Webhook texnologiyasi:** Bot doimiy ravishda serverni so'roq qilmasligi va xabarlarni soniyaning ulushlarida yetkazib berishi uchun "Long-Polling" usulidan rasmiy **Telegram Webhook** tizimiga o'tkazilishi kerak.
+* **Reverse Proxy va SSL:** Xavfsiz ulanishni ta'minlash uchun Nginx (yoki Traefik) orqali Reverse Proxy o'rnatilishi hamda domen uchun bepul Let's Encrypt SSL (HTTPS) sertifikati ulanishi zarur.
+
+**3. Uzluksiz Integratsiya (CI/CD):**
+* Loyihani serverga qo'lda yuklash amaliyotini cheklash maqsadida **GitHub Actions** yoki **GitLab CI/CD** o'rnatilishi lozim. Bu kodni `main` yoki `production` branch'iga qo'shish bilan bot serverida yangilanishni avtomatik sinovdan o'tkazadi va ishga tushiradi (Zero-downtime deployment).
+
+**4. Monitoring va Jurnallashtirish (Logging):**
+* **Xatoliklar nazorati:** Kodda yuzaga keladigan istisno xatoliklarni (exceptions) tezkor aniqlash va dasturchiga xabar berish uchun loyihaga **Sentry** platformasi integratsiya qilinadi.
+* **Tizim metrikalari:** Bot foydalanuvchilari soni, so'rovlar chastotasi va server resurslarini (CPU/RAM) kuzatib borish uchun **Prometheus** hamda vizual dashboard'lar uchun **Grafana** o'rnatilishi tavsiya etiladi.
+
+**5. Xavfsizlik Talablari:**
+* Barcha maxfiy kalitlar (Bot Token, DB parollari, API kalitlar) ochiq kodda saqlanmaydi va qat'iy ravishda `.env` fayllari yoki tizim muhit o'zgaruvchilari (Environment Variables) orqali boshqarilishi shart.
+* DDoS yoki Spamlardan himoya qilish maqsadida server xavfsizlik devorlari (Firewall/UFW) va Telegram tomonidan belgilangan Rate-Limiting funksiyalari yoqilishi kerak.
+
