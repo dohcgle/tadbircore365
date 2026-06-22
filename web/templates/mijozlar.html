@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block header_title %}Mijozlar{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 w-full overflow-hidden">
+    <div class="p-4 md:p-6 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h2 class="text-xl font-semibold text-gray-800">Barcha Mijozlar</h2>
+    </div>
+    <div class="p-4 md:p-6 overflow-x-auto w-full">
+        <table id="mijozlarTable" class="w-full whitespace-nowrap text-left text-sm text-gray-600 display">
+            <thead class="bg-gray-50 text-gray-700 uppercase font-medium">
+                <tr>
+                    <th class="px-4 py-3 border-b">ID</th>
+                    <th class="px-4 py-3 border-b">Telegram ID</th>
+                    <th class="px-4 py-3 border-b">Ism</th>
+                    <th class="px-4 py-3 border-b">Familiya</th>
+                    <th class="px-4 py-3 border-b">Username</th>
+                    <th class="px-4 py-3 border-b">Telefon</th>
+                    <th class="px-4 py-3 border-b">Sana</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr class="hover:bg-gray-50 border-b last:border-b-0">
+                    <td class="px-4 py-3 font-medium text-gray-900">#{{ client.id }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ client.user_id }}</td>
+                    <td class="px-4 py-3">{{ client.first_name if client.first_name else '-' }}</td>
+                    <td class="px-4 py-3">{{ client.last_name if client.last_name else '-' }}</td>
+                    <td class="px-4 py-3">
+                        {% if client.username %}
+                            <a href="https://t.me/{{ client.username }}" target="_blank" class="text-blue-600 hover:underline">@{{ client.username }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">{{ client.phone if client.phone else '-' }}</td>
+                    <td class="px-4 py-3">{{ client.created_at[:16].replace('T', ' ') if client.created_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#mijozlarTable').DataTable({
+            "order": [[ 0, "desc" ]],
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/uz.json"
+            }
+        });
+    });
+</script>
+{% endblock %}

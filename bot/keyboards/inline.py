@@ -1,23 +1,24 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from bot.locales import _btn
 
-def add_nav_buttons(keyboard: InlineKeyboardMarkup) -> InlineKeyboardMarkup:
+def add_nav_buttons(keyboard: InlineKeyboardMarkup, lang: str = 'uz') -> InlineKeyboardMarkup:
     # Klaviaturalarga Orqaga va Oldinga tugmalarini qo'shish
     keyboard.inline_keyboard.append([
-        InlineKeyboardButton(text="⬅️ Orqaga", callback_data="nav_back"),
-        InlineKeyboardButton(text="➡️ Oldinga", callback_data="nav_next")
+        InlineKeyboardButton(text=_btn("nav_back", lang), callback_data="nav_back"),
+        InlineKeyboardButton(text=_btn("nav_next", lang), callback_data="nav_next")
     ])
     return keyboard
 
-def main_menu_keyboard() -> InlineKeyboardMarkup:
+def main_menu_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🔍 Kredit tanlash", callback_data="start_credit_scenario"),
-                InlineKeyboardButton(text="📞 Murojaat qoldirish", callback_data="leave_request")
+                InlineKeyboardButton(text=_btn("credit", lang), callback_data="start_credit_scenario"),
+                InlineKeyboardButton(text=_btn("murojaat", lang), callback_data="leave_request")
             ],
             [
-                InlineKeyboardButton(text="💡 AI-maslahatchi", callback_data="ai_advisor"),
-                InlineKeyboardButton(text="❓ Yordam / FAQ", callback_data="help_faq")
+                InlineKeyboardButton(text=_btn("ai", lang), callback_data="ai_advisor"),
+                InlineKeyboardButton(text=_btn("faq", lang), callback_data="help_faq")
             ]
         ]
     )
@@ -33,102 +34,101 @@ def language_keyboard() -> InlineKeyboardMarkup:
         ]
     )
 
-def amount_keyboard() -> InlineKeyboardMarkup:
+def amount_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return add_nav_buttons(InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="50 mln gacha 💰", callback_data="amount_50m")],
-            [InlineKeyboardButton(text="50 - 100 mln 💵", callback_data="amount_50-100m")],
-            [InlineKeyboardButton(text="100 - 500 mln 💸", callback_data="amount_100-500m")],
-            [InlineKeyboardButton(text="500 mln+ 🏦", callback_data="amount_500m_plus")]
+            [InlineKeyboardButton(text=_btn("btn_amount_1", lang), callback_data="amount_50m")],
+            [InlineKeyboardButton(text=_btn("btn_amount_2", lang), callback_data="amount_50-100m")],
+            [InlineKeyboardButton(text=_btn("btn_amount_3", lang), callback_data="amount_100-500m")],
+            [InlineKeyboardButton(text=_btn("btn_amount_4", lang), callback_data="amount_500m_plus")]
         ]
-    ))
+    ), lang)
 
-def term_keyboard() -> InlineKeyboardMarkup:
+def term_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return add_nav_buttons(InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="6 oy 🗓", callback_data="term_6"),
-                InlineKeyboardButton(text="12 oy 🗓", callback_data="term_12")
+                InlineKeyboardButton(text=_btn("btn_term_1", lang), callback_data="term_6"),
+                InlineKeyboardButton(text=_btn("btn_term_2", lang), callback_data="term_12")
             ],
             [
-                InlineKeyboardButton(text="24 oy 🗓", callback_data="term_24"),
-                InlineKeyboardButton(text="36 oy 🗓", callback_data="term_36")
+                InlineKeyboardButton(text=_btn("btn_term_3", lang), callback_data="term_24"),
+                InlineKeyboardButton(text=_btn("btn_term_4", lang), callback_data="term_36")
             ],
             [
-                InlineKeyboardButton(text="60 oy 🗓", callback_data="term_60")
+                InlineKeyboardButton(text=_btn("btn_term_5", lang), callback_data="term_60")
             ]
         ]
-    ))
+    ), lang)
 
-def purpose_keyboard() -> InlineKeyboardMarkup:
+def purpose_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return add_nav_buttons(InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🏢 Mikrokredit", callback_data="purpose_1"),
-                InlineKeyboardButton(text="🛒 Kundalik xarajatlar", callback_data="purpose_2")
+                InlineKeyboardButton(text=_btn("btn_purp_1", lang), callback_data="purpose_1"),
+                InlineKeyboardButton(text=_btn("btn_purp_2", lang), callback_data="purpose_2")
             ],
             [
-                InlineKeyboardButton(text="📈 Biznes rivoji", callback_data="purpose_3"),
-                InlineKeyboardButton(text="🌱 Yangi boshlaganlar", callback_data="purpose_4")
+                InlineKeyboardButton(text=_btn("btn_purp_3", lang), callback_data="purpose_3"),
+                InlineKeyboardButton(text=_btn("btn_purp_4", lang), callback_data="purpose_4")
             ],
             [
-                InlineKeyboardButton(text="🚗 Avtokredit", callback_data="purpose_5"),
-                InlineKeyboardButton(text="🔁 Overdraft", callback_data="purpose_6")
+                InlineKeyboardButton(text=_btn("btn_purp_5", lang), callback_data="purpose_5"),
+                InlineKeyboardButton(text=_btn("btn_purp_6", lang), callback_data="purpose_6")
             ],
             [
-                InlineKeyboardButton(text="🏗 Ipoteka/Qurilish", callback_data="purpose_7"),
-                InlineKeyboardButton(text="♻️ Yashil kredit", callback_data="purpose_8")
+                InlineKeyboardButton(text=_btn("btn_purp_7", lang), callback_data="purpose_7"),
+                InlineKeyboardButton(text=_btn("btn_purp_8", lang), callback_data="purpose_8")
             ],
             [
-                InlineKeyboardButton(text="🧾 Moliyalashtirish", callback_data="purpose_9"),
-                InlineKeyboardButton(text="🧑‍🎓 Yosh tadbirkorlar", callback_data="purpose_10")
+                InlineKeyboardButton(text=_btn("btn_purp_9", lang), callback_data="purpose_9"),
+                InlineKeyboardButton(text=_btn("btn_purp_10", lang), callback_data="purpose_10")
             ],
             [
-                InlineKeyboardButton(text="👩‍💼 Ayollar tadbirkorligi", callback_data="purpose_11"),
-                InlineKeyboardButton(text="🔄 Universal kredit", callback_data="purpose_12")
+                InlineKeyboardButton(text=_btn("btn_purp_11", lang), callback_data="purpose_11"),
+                InlineKeyboardButton(text=_btn("btn_purp_12", lang), callback_data="purpose_12")
             ]
         ]
-    ))
+    ), lang)
 
-def collateral_keyboard() -> InlineKeyboardMarkup:
+def collateral_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return add_nav_buttons(InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🚗 Avtomobil", callback_data="collateral_auto")],
-            [InlineKeyboardButton(text="🏠 Ko'chmas mulk", callback_data="collateral_realestate")],
-            [InlineKeyboardButton(text="🚜 Texnika", callback_data="collateral_technics")]
+            [InlineKeyboardButton(text=_btn("btn_col_1", lang), callback_data="collateral_auto")],
+            [InlineKeyboardButton(text=_btn("btn_col_2", lang), callback_data="collateral_realestate")],
+            [InlineKeyboardButton(text=_btn("btn_col_3", lang), callback_data="collateral_technics")]
         ]
-    ))
+    ), lang)
 
-def skip_photo_keyboard() -> InlineKeyboardMarkup:
+def skip_photo_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return add_nav_buttons(InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⏭ Rasmsiz davom etish", callback_data="skip_photo")]
+            [InlineKeyboardButton(text=_btn("btn_skip_photo", lang), callback_data="skip_photo")]
         ]
-    ))
+    ), lang)
 
-def banks_keyboard(bank_names: list) -> InlineKeyboardMarkup:
+def banks_keyboard(bank_names: list, lang: str = 'uz') -> InlineKeyboardMarkup:
     buttons = []
     for i, b_name in enumerate(bank_names):
         buttons.append([InlineKeyboardButton(text=f"🏦 {b_name}", callback_data=f"bank_{i}")])
-    buttons.append([InlineKeyboardButton(text="✅ Barchasiga yuborish", callback_data="bank_all")])
+    buttons.append([InlineKeyboardButton(text=_btn("btn_bank_all", lang), callback_data="bank_all")])
     
-    return add_nav_buttons(InlineKeyboardMarkup(inline_keyboard=buttons))
+    return add_nav_buttons(InlineKeyboardMarkup(inline_keyboard=buttons), lang)
 
-def apply_credit_keyboard(amount: str, term: str, purpose: str, b_type: str) -> InlineKeyboardMarkup:
-    # URL ni encode qilib yuboramiz. URL TadbirCore domeniga moslanadi.
+def apply_credit_keyboard(amount: str, term: str, purpose: str, b_type: str, lang: str = 'uz') -> InlineKeyboardMarkup:
     url = f"https://tadbircore.uz/apply?amount={amount}&term={term}&purpose={purpose}&type={b_type}"
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Ariza topshirish", url=url)],
-            [InlineKeyboardButton(text="⬅️ Bosh menyuga qaytish", callback_data="back_to_main")]
+            [InlineKeyboardButton(text=_btn("btn_apply", lang), url=url)],
+            [InlineKeyboardButton(text=_btn("btn_back_main_inline", lang), callback_data="back_to_main")]
         ]
     )
 
-def calculator_type_keyboard() -> InlineKeyboardMarkup:
+def calculator_type_keyboard(lang: str = 'uz') -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="📊 Annuitet", callback_data="calc_type_annuity")],
-            [InlineKeyboardButton(text="📉 Differensial", callback_data="calc_type_diff")]
+            [InlineKeyboardButton(text=_btn("calc_ann", lang), callback_data="calc_type_annuity")],
+            [InlineKeyboardButton(text=_btn("calc_diff", lang), callback_data="calc_type_diff")]
         ]
     )
 

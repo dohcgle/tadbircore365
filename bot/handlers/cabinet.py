@@ -1,10 +1,11 @@
 from aiogram import Router, F
 from aiogram.types import Message
 from bot.database import get_user_credit_requests
+from bot.locales import _, _btn, get_lang, BTNS
 
 cabinet_router = Router()
 
-@cabinet_router.message(F.text == "👤 Shaxsiy kabinet")
+@cabinet_router.message(F.text.in_([BTNS['uz']['cabinet'], BTNS['ru']['cabinet']]))
 async def process_cabinet(message: Message):
     user_id = message.from_user.id
     requests = await get_user_credit_requests(user_id)

@@ -1,5 +1,6 @@
 import os
-import aiosqlite
+import asyncpg
+from datetime import datetime
 from fastapi import FastAPI, Request, Depends, Form, Cookie
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -7,10 +8,39 @@ from fastapi.exceptions import HTTPException
 from fastapi import status
 import secrets
 
+import asyncio
+import urllib.request
+import urllib.parse
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-DB_PATH = "data/tadbircore.db"
+def send_telegram_notification(text: str):
+    bot_token = os.getenv("BOT_TOKEN")
+    chat_id = os.getenv("ADMIN_CHAT_ID")
+    if not bot_token or not chat_id:
+        return
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    data = urllib.parse.urlencode({
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "Markdown"
+    }).encode('utf-8')
+    try:
+        req = urllib.request.Request(url, data=data)
+        urllib.request.urlopen(req, timeout=5)
+    except Exception as e:
+        print(f"Failed to send notification: {e}")
+
+@app.on_event("startup")
+async def startup_event():
+    await asyncio.to_thread(send_telegram_notification, "✅ **TadbirCore Veb sayti (http://localhost) ishga tushdi va ishlashga tayyor!**")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await asyncio.to_thread(send_telegram_notification, "❌ **TadbirCore Veb sayti (http://localhost) to'xtadi!**")
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://admin:adminpassword@db:5432/tadbircore")
 
 def get_current_username(auth_token: str = Cookie(None)):
     if not auth_token:
@@ -43,28 +73,32 @@ async def login_post(request: Request, username: str = Form(...), password: str 
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, username: str = Depends(get_current_username)):
-    async with aiosqlite.connect(DB_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
         # 1. Umumiy arizalar soni
-        async with db.execute("SELECT COUNT(*) FROM credit_requests") as cursor:
-            total_requests = (await cursor.fetchone())[0]
+        total_requests = await conn.fetchval("SELECT COUNT(*) FROM credit_requests")
             
         # 2. Qabul qilingan arizalar
-        async with db.execute("SELECT COUNT(*) FROM credit_requests WHERE status != 'Kutilyapti'") as cursor:
-            accepted_requests = (await cursor.fetchone())[0]
+        accepted_requests = await conn.fetchval("SELECT COUNT(*) FROM credit_requests WHERE status != 'Kutilyapti'")
             
         # 3. Kutilayotgan arizalar
-        async with db.execute("SELECT COUNT(*) FROM credit_requests WHERE status = 'Kutilyapti'") as cursor:
-            pending_requests = (await cursor.fetchone())[0]
+        pending_requests = await conn.fetchval("SELECT COUNT(*) FROM credit_requests WHERE status = 'Kutilyapti'")
             
         # 4. Banklar bo'yicha taqsimot
-        async with db.execute("SELECT selected_bank, COUNT(*) as count FROM credit_requests GROUP BY selected_bank") as cursor:
-            banks_data = [dict(row) for row in await cursor.fetchall()]
+        rows = await conn.fetch("SELECT selected_bank, COUNT(*) as count FROM credit_requests GROUP BY selected_bank")
+        banks_data = [dict(row) for row in rows]
             
         # 5. So'nggi arizalar ro'yxati
-        async with db.execute("SELECT * FROM credit_requests ORDER BY id DESC LIMIT 50") as cursor:
-            latest_requests = [dict(row) for row in await cursor.fetchall()]
+        rows = await conn.fetch("SELECT * FROM credit_requests ORDER BY id DESC LIMIT 50")
+        
+        latest_requests = []
+        for row in rows:
+            r = dict(row)
+            if 'created_at' in r and isinstance(r['created_at'], datetime):
+                r['created_at'] = r['created_at'].isoformat()
+            latest_requests.append(r)
+    finally:
+        await conn.close()
             
     return templates.TemplateResponse(request=request, name="dashboard.html", context={
         "request": request,
@@ -77,15 +111,42 @@ async def dashboard(request: Request, username: str = Depends(get_current_userna
 
 @app.get("/arizalar", response_class=HTMLResponse)
 async def arizalar_dashboard(request: Request, username: str = Depends(get_current_username)):
-    async with aiosqlite.connect(DB_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        async with db.execute("SELECT * FROM credit_requests ORDER BY id DESC") as cursor:
-            requests = [dict(row) for row in await cursor.fetchall()]
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        rows = await conn.fetch("SELECT * FROM credit_requests ORDER BY id DESC")
+        requests = []
+        for row in rows:
+            r = dict(row)
+            if 'created_at' in r and isinstance(r['created_at'], datetime):
+                r['created_at'] = r['created_at'].isoformat()
+            requests.append(r)
+    finally:
+        await conn.close()
             
     return templates.TemplateResponse(request=request, name="arizalar.html", context={
         "request": request,
         "requests": requests,
         "active_page": "arizalar"
+    })
+
+@app.get("/mijozlar", response_class=HTMLResponse)
+async def mijozlar_dashboard(request: Request, username: str = Depends(get_current_username)):
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        rows = await conn.fetch("SELECT * FROM requests ORDER BY id DESC")
+        clients = []
+        for row in rows:
+            r = dict(row)
+            if 'created_at' in r and isinstance(r['created_at'], datetime):
+                r['created_at'] = r['created_at'].isoformat()
+            clients.append(r)
+    finally:
+        await conn.close()
+            
+    return templates.TemplateResponse(request=request, name="mijozlar.html", context={
+        "request": request,
+        "clients": clients,
+        "active_page": "mijozlar"
     })
 
 @app.get("/logout")
@@ -101,18 +162,27 @@ async def update_status(
     new_status: str = Form(...),
     username: str = Depends(get_current_username)
 ):
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("UPDATE credit_requests SET status = ?, accepted_by = ? WHERE request_id = ?", 
-                         (new_status, username, request_id))
-        await db.commit()
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        await conn.execute("UPDATE credit_requests SET status = $1, accepted_by = $2 WHERE request_id = $3", 
+                         new_status, username, request_id)
+    finally:
+        await conn.close()
     return JSONResponse({"success": True, "new_status": new_status, "request_id": request_id})
 
 @app.get("/livechat", response_class=HTMLResponse)
 async def livechat_dashboard(request: Request, username: str = Depends(get_current_username)):
-    async with aiosqlite.connect(DB_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        async with db.execute("SELECT * FROM contact_requests WHERE req_type = 'livechat' ORDER BY id DESC LIMIT 50") as cursor:
-            chats = [dict(row) for row in await cursor.fetchall()]
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        rows = await conn.fetch("SELECT * FROM contact_requests WHERE req_type = 'livechat' ORDER BY id DESC LIMIT 50")
+        chats = []
+        for row in rows:
+            r = dict(row)
+            if 'created_at' in r and isinstance(r['created_at'], datetime):
+                r['created_at'] = r['created_at'].isoformat()
+            chats.append(r)
+    finally:
+        await conn.close()
             
     return templates.TemplateResponse(request=request, name="livechat.html", context={
         "request": request,
@@ -122,10 +192,17 @@ async def livechat_dashboard(request: Request, username: str = Depends(get_curre
 
 @app.get("/murojaatlar", response_class=HTMLResponse)
 async def murojaatlar_dashboard(request: Request, username: str = Depends(get_current_username)):
-    async with aiosqlite.connect(DB_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        async with db.execute("SELECT * FROM contact_requests WHERE req_type = 'murojaat' ORDER BY id DESC") as cursor:
-            requests = [dict(row) for row in await cursor.fetchall()]
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        rows = await conn.fetch("SELECT * FROM contact_requests WHERE req_type = 'murojaat' ORDER BY id DESC")
+        requests = []
+        for row in rows:
+            r = dict(row)
+            if 'created_at' in r and isinstance(r['created_at'], datetime):
+                r['created_at'] = r['created_at'].isoformat()
+            requests.append(r)
+    finally:
+        await conn.close()
             
     return templates.TemplateResponse(request=request, name="murojaatlar.html", context={
         "request": request,

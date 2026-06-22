@@ -7,38 +7,31 @@ from bot.states.credit_state import ContactState, MurojaatState
 from bot.keyboards.reply import main_menu_reply_keyboard, end_chat_keyboard
 from bot.database import save_contact_request, get_user_phone
 from bot.config import ADMIN_CHAT_ID
+from bot.locales import _, _btn, get_lang, BTNS
 
 contact_router = Router()
 
-@contact_router.message(F.text == "💬 Jonli chat")
+@contact_router.message(F.text.in_([BTNS['uz']['live_chat'], BTNS['ru']['live_chat']]))
 async def start_live_chat(message: Message, state: FSMContext):
     await state.set_state(ContactState.WAITING_FOR_TEXT)
-    text = (
-        "👨‍💻 **Operator bilan bog'lanish**\n\n"
-        "Siz jonli chatga ulandingiz. Barcha savol va takliflaringizni shu yerda yozishingiz mumkin. "
-        "Operatorlarimiz tez orada sizga shu yerning o'zida javob qaytarishadi.\n\n"
-        "Suhbatni tugatish uchun pastdagi **❌ Chatni yakunlash** tugmasini bosing."
-    )
-    await message.answer(text, reply_markup=end_chat_keyboard())
+    lang = await get_lang(message.from_user.id)
+    await message.answer(_("live_chat_start", lang), reply_markup=end_chat_keyboard(lang))
 
 @contact_router.callback_query(F.data == "leave_request")
 async def start_live_chat_callback(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ContactState.WAITING_FOR_TEXT)
-    text = (
-        "👨‍💻 **Operator bilan bog'lanish**\n\n"
-        "Siz jonli chatga ulandingiz. Barcha savol va takliflaringizni shu yerda yozishingiz mumkin. "
-        "Operatorlarimiz tez orada sizga shu yerning o'zida javob qaytarishadi.\n\n"
-        "Suhbatni tugatish uchun pastdagi **❌ Chatni yakunlash** tugmasini bosing."
-    )
+    lang = await get_lang(callback.from_user.id)
     await callback.message.delete()
-    await callback.message.answer(text, reply_markup=end_chat_keyboard())
+    await callback.message.answer(_("live_chat_start", lang), reply_markup=end_chat_keyboard(lang))
     await callback.answer()
 
 @contact_router.message(ContactState.WAITING_FOR_TEXT)
 async def process_live_chat_text(message: Message, state: FSMContext, bot: Bot):
-    if message.text == "❌ Chatni yakunlash":
+    if message.text in [BTNS['uz']['end_chat'], BTNS['ru']['end_chat']]:
         await state.clear()
-        return await message.answer("Suhbat yakunlandi. Asosiy menyudasiz:", reply_markup=main_menu_reply_keyboard())
+        lang = await get_lang(message.from_user.id)
+        await message.answer(_("chat_ended", lang), reply_markup=main_menu_reply_keyboard(lang))
+        return
         
     murojaat_text = message.text or message.caption or "Media xabar"
     user_id = message.from_user.id
@@ -75,24 +68,22 @@ async def process_live_chat_text(message: Message, state: FSMContext, bot: Bot):
             
     # Do not clear state, keep them in chat
 
-@contact_router.message(F.text == "📝 Murojaat qoldirish")
+@contact_router.message(F.text.in_([BTNS['uz']['murojaat'], BTNS['ru']['murojaat']]))
 async def start_murojaat(message: Message, state: FSMContext):
     await state.set_state(MurojaatState.WAITING_FOR_TEXT)
-    text = (
-        "📝 **Murojaat qoldirish**\n\n"
-        "O'z taklif, shikoyat yoki savolingizni shu yerda yozib qoldirishingiz mumkin. "
-        "Operatorlarimiz uni ko'rib chiqib, siz bilan bog'lanishadi.\n\n"
-        "Bekor qilish va orqaga qaytish uchun quyidagi tugmani bosing."
-    )
+    lang = await get_lang(message.from_user.id)
+    
     from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-    cancel_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="❌ Bekor qilish")]], resize_keyboard=True)
-    await message.answer(text, reply_markup=cancel_kb)
+    cancel_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=_btn("cancel", lang))]], resize_keyboard=True)
+    await message.answer(_("murojaat_start", lang), reply_markup=cancel_kb)
 
 @contact_router.message(MurojaatState.WAITING_FOR_TEXT)
 async def process_murojaat_text(message: Message, state: FSMContext, bot: Bot):
-    if message.text == "❌ Bekor qilish":
+    if message.text in [BTNS['uz']['cancel'], BTNS['ru']['cancel']]:
         await state.clear()
-        return await message.answer("Murojaat yuborish bekor qilindi.", reply_markup=main_menu_reply_keyboard())
+        lang = await get_lang(message.from_user.id)
+        await message.answer(_("murojaat_cancelled", lang), reply_markup=main_menu_reply_keyboard(lang))
+        return
         
     murojaat_text = message.text or message.caption or "Media xabar"
     user_id = message.from_user.id
@@ -125,7 +116,8 @@ async def process_murojaat_text(message: Message, state: FSMContext, bot: Bot):
             print(f"Error sending message to admin: {e}")
             
     await state.clear()
-    await message.answer("✅ Murojaatingiz muvaffaqiyatli yuborildi! Tez orada mutaxassislarimiz aloqaga chiqishadi.", reply_markup=main_menu_reply_keyboard())
+    lang = await get_lang(message.from_user.id)
+    await message.answer(_("murojaat_sent", lang), reply_markup=main_menu_reply_keyboard(lang))
 
 # Handler for Admin replies
 @contact_router.message(F.reply_to_message)

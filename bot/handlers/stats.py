@@ -1,8 +1,10 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-import aiosqlite
-from bot.database import DB_NAME
+import asyncpg
+import os
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://admin:adminpassword@db:5432/tadbircore")
 from bot.config import ADMIN_CHAT_ID
 
 stats_router = Router()
@@ -13,18 +15,18 @@ async def cmd_stats(message: Message):
         await message.answer("⚠️ Bu komanda faqat adminlar uchun!")
         return
         
-    async with aiosqlite.connect(DB_NAME) as db:
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
         # Umumiy arizalar
-        async with db.execute("SELECT COUNT(*) FROM credit_requests") as cursor:
-            total = (await cursor.fetchone())[0]
-            
+        total = await conn.fetchval("SELECT COUNT(*) FROM credit_requests")
+        
         # Qabul qilingan
-        async with db.execute("SELECT COUNT(*) FROM credit_requests WHERE status != 'Kutilyapti'") as cursor:
-            accepted = (await cursor.fetchone())[0]
-            
+        accepted = await conn.fetchval("SELECT COUNT(*) FROM credit_requests WHERE status != 'Kutilyapti'")
+        
         # Kutilayotgan
-        async with db.execute("SELECT COUNT(*) FROM credit_requests WHERE status = 'Kutilyapti'") as cursor:
-            pending = (await cursor.fetchone())[0]
+        pending = await conn.fetchval("SELECT COUNT(*) FROM credit_requests WHERE status = 'Kutilyapti'")
+    finally:
+        await conn.close()
             
     text = (
         f"📊 **Qisqacha Statistika**\n\n"

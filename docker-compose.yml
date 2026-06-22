@@ -1,12 +1,27 @@
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: tadbircore365_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: tadbircore
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   bot:
     build: .
     container_name: tadbircore365_bot
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://admin:adminpassword@db:5432/tadbircore
     volumes:
       - ./data:/app/data
+    depends_on:
+      - db
 
   web:
     build: ./web
@@ -14,8 +29,12 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://admin:adminpassword@db:5432/tadbircore
     volumes:
       - ./data:/app/data
+    depends_on:
+      - db
 
   nginx:
     image: nginx:latest
@@ -27,3 +46,6 @@ services:
     depends_on:
       - web
     restart: unless-stopped
+
+volumes:
+  postgres_data:

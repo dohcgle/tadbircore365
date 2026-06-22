@@ -17,6 +17,7 @@ from bot.keyboards.inline import (
     operator_accept_keyboard
 )
 from bot.config import ADMIN_CHAT_ID
+from bot.locales import _, _btn, get_lang, BTNS
 
 credit_router = Router()
 
@@ -39,25 +40,24 @@ ALL_BANKS = [
     "TBC Bank", "Tenge Bank", "Trast Bank", "Universal Bank"
 ]
 
-@credit_router.message(F.text == "🏢 Kredit tanlash")
+@credit_router.message(F.text.in_([BTNS['uz']['credit'], BTNS['ru']['credit']]))
 async def start_credit(message: Message, state: FSMContext):
+    lang = await get_lang(message.from_user.id)
     await state.set_state(CreditState.ASK_INN)
-    text = (
-        "🆔 **1-qadam: Mijozni identifikatsiya qilish**\n\n"
-        "Iltimos, o'zingizning INN (9 xonali) yoki JSHSHIR (14 xonali) raqamingizni kiriting:"
-    )
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer(_("credit_step1", lang), reply_markup=ReplyKeyboardRemove())
 
 @credit_router.message(CreditState.ASK_INN)
 async def process_inn(message: Message, state: FSMContext):
     inn = message.text.strip()
     if not inn.isdigit() or len(inn) not in [9, 14]:
-        await message.answer("Siz noto'g'ri kiritdingiz, iltimos to'g'ri kiriting")
+        lang = await get_lang(message.from_user.id)
+        await message.answer(_("credit_invalid_inn", lang))
         return
 
     business = get_mock_business(inn)
     if not business:
-        await message.answer("Siz noto'g'ri kiritdingiz, iltimos to'g'ri kiriting")
+        lang = await get_lang(message.from_user.id)
+        await message.answer(_("credit_invalid_inn", lang))
         return
 
     # Ma'lumotlarni saqlaymiz
@@ -98,7 +98,8 @@ async def process_amount_callback(callback: CallbackQuery, state: FSMContext):
 @credit_router.message(CreditState.ASK_AMOUNT)
 async def process_amount_message(message: Message, state: FSMContext):
     if not message.text.replace(" ", "").isdigit():
-        await message.answer("⚠️ Iltimos, summani faqat raqamlarda kiriting yoki tugmalardan foydalaning:", reply_markup=amount_keyboard())
+        lang = await get_lang(message.from_user.id)
+        await message.answer(_("calc_invalid_amount", lang), reply_markup=amount_keyboard(lang))
         return
     
     amount_val = int(message.text.replace(" ", ""))
@@ -157,11 +158,8 @@ async def process_purpose_callback(callback: CallbackQuery, state: FSMContext):
     await state.update_data(purpose=purpose)
     
     await state.set_state(CreditState.ASK_COLLATERAL)
-    text = (
-        "🛡 **5-qadam: Ta'minot (Garov)**\n\n"
-        "Qanday ta'minot turini taqdim eta olasiz?"
-    )
-    await callback.message.edit_text(text, reply_markup=collateral_keyboard())
+    lang = await get_lang(callback.from_user.id)
+    await callback.message.edit_text(_("credit_step5", lang), reply_markup=collateral_keyboard(lang))
     await callback.answer()
 
 @credit_router.callback_query(CreditState.ASK_COLLATERAL, F.data.startswith("collateral_"))
@@ -175,13 +173,9 @@ async def process_collateral_callback(callback: CallbackQuery, state: FSMContext
     await state.update_data(collateral=collateral)
     
     await state.set_state(CreditState.ASK_COLLATERAL_PHOTO)
-    text = (
-        f"📸 **Ta'minot rasmi**\n\n"
-        f"Siz **{collateral}** turini tanladingiz. Iltimos, mulk rasmini yoki hujjatini yuklang.\n"
-        "Yoki rasmsiz davom etishingiz mumkin:"
-    )
+    lang = await get_lang(callback.from_user.id)
     await callback.message.delete()
-    await callback.message.answer(text, reply_markup=skip_photo_keyboard())
+    await callback.message.answer(_("credit_step_photo1", lang).format(collateral=collateral), reply_markup=skip_photo_keyboard(lang))
     await callback.answer()
 
 @credit_router.callback_query(CreditState.ASK_COLLATERAL_PHOTO, F.data == "skip_photo")
@@ -201,11 +195,8 @@ async def ask_for_banks(message: Message, state: FSMContext):
     await state.update_data(recommended_banks=recommended_banks)
     
     await state.set_state(CreditState.SELECT_BANKS)
-    text = (
-        "🏦 **6-qadam: Banklarni tanlash**\n\n"
-        "Sizning so'rovingizga mos keladigan banklar topildi. Qaysi bankka arizangizni yuboraylik?"
-    )
-    await message.answer(text, reply_markup=banks_keyboard(recommended_banks))
+    lang = await get_lang(message.from_user.id)
+    await message.answer(_("credit_step6", lang), reply_markup=banks_keyboard(recommended_banks, lang))
 
 @credit_router.callback_query(CreditState.SELECT_BANKS, F.data.startswith("bank_"))
 async def process_bank_selection(callback: CallbackQuery, state: FSMContext):
@@ -214,12 +205,13 @@ async def process_bank_selection(callback: CallbackQuery, state: FSMContext):
     
     if callback.data == "bank_all":
         selected_bank = "Barcha tavsiya etilgan banklar"
-        banks_text = ", ".join([f"{i+1}. {b}" for i, b in enumerate(recommended_banks)])
-        selected_bank_display = f"Barcha tavsiya etilgan banklar:\n{banks_text}"
+        lang = await get_lang(callback.from_user.id)
+        banks_text = "\\n".join([f"🏦 **{i+1}. {b}**" for i, b in enumerate(recommended_banks)])
+        selected_bank_display = _("banks_all_display", lang).format(banks_text=banks_text)
     else:
         idx = int(callback.data.split("_")[1])
         selected_bank = recommended_banks[idx]
-        selected_bank_display = f"{selected_bank}"
+        selected_bank_display = f"**{selected_bank}**"
         
     await state.update_data(selected_bank=selected_bank)
     
@@ -282,8 +274,10 @@ async def process_bank_selection(callback: CallbackQuery, state: FSMContext):
         f"🔹 **Kredit muddati:** {term}\n"
         f"🔹 **Kredit olish maqsadi:** {purpose}\n"
         f"🔹 **Ta'minot turi:** {collateral}\n\n"
-        f"✅ Sizning arizangiz 🆔 **{req_id}** raqami bilan ro'yxatga olindi.\n"
-        f"🏦 **{selected_bank_display}** ga yuborildi. Bank vakillari tez orada siz bilan aloqaga chiqadi!"
+        f"✅ Sizning arizangiz 🆔 **{req_id}** raqami bilan ro'yxatga olindi.\n\n"
+        f"📤 **Arizangiz quyidagi bank(lar)ga yuborildi:**\n"
+        f"{selected_bank_display}\n\n"
+        f"Bank vakillari tez orada siz bilan aloqaga chiqadi!"
     )
     
     await callback.message.delete()
@@ -364,28 +358,32 @@ async def nav_next_handler(callback: CallbackQuery, state: FSMContext):
     
     if current_state == CreditState.ASK_AMOUNT.state:
         if "amount" not in data:
-            return await callback.answer("⚠️ Iltimos, avval tanlovni amalga oshiring!", show_alert=True)
+            lang = await get_lang(callback.from_user.id)
+            return await callback.answer(_("alert_select_first", lang), show_alert=True)
         await state.set_state(CreditState.ASK_TERM)
         text = "🗓 **3-qadam: Kredit muddati**\n\nQarzni qancha muddatda qaytarishni rejalashtiryapsiz?"
         await callback.message.edit_text(text, reply_markup=term_keyboard())
         
     elif current_state == CreditState.ASK_TERM.state:
         if "term" not in data:
-            return await callback.answer("⚠️ Iltimos, avval tanlovni amalga oshiring!", show_alert=True)
+            lang = await get_lang(callback.from_user.id)
+            return await callback.answer(_("alert_select_first", lang), show_alert=True)
         await state.set_state(CreditState.ASK_PURPOSE)
         text = "🎯 **4-qadam: Kredit maqsadi**\n\nKredit mablag'larini qanday maqsadda ishlatmoqchisiz?"
         await callback.message.edit_text(text, reply_markup=purpose_keyboard())
         
     elif current_state == CreditState.ASK_PURPOSE.state:
         if "purpose" not in data:
-            return await callback.answer("⚠️ Iltimos, avval tanlovni amalga oshiring!", show_alert=True)
+            lang = await get_lang(callback.from_user.id)
+            return await callback.answer(_("alert_select_first", lang), show_alert=True)
         await state.set_state(CreditState.ASK_COLLATERAL)
         text = "🛡 **5-qadam: Ta'minot (Garov)**\n\nQanday ta'minot turini taqdim eta olasiz?"
         await callback.message.edit_text(text, reply_markup=collateral_keyboard())
         
     elif current_state == CreditState.ASK_COLLATERAL.state:
         if "collateral" not in data:
-            return await callback.answer("⚠️ Iltimos, avval tanlovni amalga oshiring!", show_alert=True)
+            lang = await get_lang(callback.from_user.id)
+            return await callback.answer(_("alert_select_first", lang), show_alert=True)
         await state.set_state(CreditState.ASK_COLLATERAL_PHOTO)
         collateral = data.get("collateral", "Boshqa")
         text = f"📸 **Ta'minot rasmi**\n\nSiz **{collateral}** turini tanladingiz. Iltimos, mulk rasmini yoki hujjatini yuklang.\nYoki rasmsiz davom etishingiz mumkin:"
@@ -393,7 +391,8 @@ async def nav_next_handler(callback: CallbackQuery, state: FSMContext):
         
     elif current_state == CreditState.ASK_COLLATERAL_PHOTO.state:
         if "has_photo" not in data:
-            return await callback.answer("⚠️ Iltimos, rasm yuklang yoki 'Rasmsiz davom etish' ni tanlang!", show_alert=True)
+            lang = await get_lang(callback.from_user.id)
+            return await callback.answer(_("alert_upload_photo", lang), show_alert=True)
         recommended_banks = data.get("recommended_banks")
         if not recommended_banks:
             import random
@@ -405,6 +404,7 @@ async def nav_next_handler(callback: CallbackQuery, state: FSMContext):
         await callback.message.edit_text(text, reply_markup=banks_keyboard(recommended_banks))
         
     elif current_state == CreditState.SELECT_BANKS.state:
-        return await callback.answer("⚠️ Iltimos, ro'yxatdan banklardan birini tanlang!", show_alert=True)
+        lang = await get_lang(callback.from_user.id)
+        return await callback.answer(_("alert_select_bank", lang), show_alert=True)
         
     await callback.answer()
